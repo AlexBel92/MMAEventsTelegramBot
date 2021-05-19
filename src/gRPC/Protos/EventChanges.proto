@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+service EventChanges {
+  rpc EventChange (Changes) returns (Empty);
+}
+
+message Empty { }
+
+message Changes {
+  EventData old_event_data = 1;
+  EventData new_event_data = 2;
+}
+
+message EventData {
+  int64 id = 1;
+  bool is_canceled = 2;
+  bool Is_scheduled = 3;
+  string name = 4;
+  google.protobuf.Timestamp date = 8;
+  repeated FightCardData fight_cards = 9;
+}
+
+message FightCardData {
+  string name  = 1;
+  repeated FightRecordData fights = 2;
+}
+
+message FightRecordData {
+   string weight_class = 1;
+   string firts_fighter = 2;
+   string second_fighter = 3;
+}
