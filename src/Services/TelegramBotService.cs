@@ -255,12 +255,12 @@ namespace MMAEvents.TelegramBot.Services
                 {
                     var fightComparer = new FightComparer();
 
-                    if (CardsDiffer(oldEventData.FightCard, newEventData.FightCard, fightComparer))
+                    if (IsCardsDiffer(oldEventData.FightCard, newEventData.FightCard, fightComparer))
                     {
                         var oldFights = new List<FightDTO>();
 
                         messageBuilder.Append(
-                            $"Изменение карда турнира {newEventData.Name} {GetEventDateString(newEventData)} \n");
+                            $"Изменение карда турнира {newEventData.Name} {GetEventDateString(newEventData)} \n\n");
 
                         if (oldEventData.FightCard is not null)
                             oldFights.AddRange(oldEventData.FightCard.SelectMany(cards => cards.Fights.ToList()));
@@ -283,6 +283,7 @@ namespace MMAEvents.TelegramBot.Services
                                     messageBuilder.Append("</b>");
                                 }
                             }
+                            messageBuilder.Append("\n");
                         }
 
                         if (oldFights.Any())
@@ -360,12 +361,18 @@ namespace MMAEvents.TelegramBot.Services
             return (firtsFighter, secondFighter);
         }
 
-        private bool CardsDiffer(IEnumerable<FightCardDTO> a, IEnumerable<FightCardDTO> b, IEqualityComparer<FightDTO> comparer)
+        private bool IsCardsDiffer(IEnumerable<FightCardDTO> a, IEnumerable<FightCardDTO> b, IEqualityComparer<FightDTO> comparer)
         {
             if (a == null ^ b == null)
                 return true;
 
-            return !a.SelectMany(f => f.Fights).SequenceEqual(b.SelectMany(f => f.Fights), comparer);
+            var aFights = a.SelectMany(f => f.Fights).ToList();
+            var bFights = b.SelectMany(f => f.Fights).ToList();
+
+            if (aFights.Count != bFights.Count)
+                return true;
+
+            return aFights.Except(bFights, comparer).Any();
         }
     }
 }
@@ -385,6 +392,12 @@ class FightComparer : IEqualityComparer<FightDTO>
 
     public int GetHashCode([DisallowNull] FightDTO obj)
     {
-        return HashCode.Combine(obj.FirtsFighter, obj.SecondFighter, obj.WeightClass);
+        var firtsFighter = obj.FirtsFighter;
+        var secondFighter = obj.SecondFighter;
+
+        if (string.Compare(firtsFighter, secondFighter) > 0)
+                (firtsFighter, secondFighter) = (secondFighter, firtsFighter);
+
+        return HashCode.Combine(firtsFighter, secondFighter);
     }
 }
