@@ -211,7 +211,7 @@ namespace MMAEvents.TelegramBot.Services
 
         public async Task SendEventChangesAsync(long chatId, EventDTO oldEventData, EventDTO newEventData, CancellationToken cancellationToken = default)
         {
-            if (newEventData != null && newEventData.Date - DateTime.Now >= TimeSpan.FromDays(60))
+            if (newEventData != null && newEventData.Date - DateTime.Now >= TimeSpan.FromDays(120))
                 return;
 
             var button = new InlineKeyboardButton();
@@ -258,44 +258,32 @@ namespace MMAEvents.TelegramBot.Services
                     if (IsCardsDiffer(oldEventData.FightCard, newEventData.FightCard, fightComparer))
                     {
                         var oldFights = new List<FightDTO>();
+                        var newFights = new List<FightDTO>();
+
+                        if (oldEventData.FightCard is not null)
+                            oldFights.AddRange(oldEventData.FightCard.SelectMany(cards => cards.Fights.ToList()));
+                        if (newEventData.FightCard is not null)
+                            newFights.AddRange(newEventData.FightCard.SelectMany(cards => cards.Fights.ToList()));
 
                         messageBuilder.Append(
                             $"Изменение карда турнира {newEventData.Name} {GetEventDateString(newEventData)} \n\n");
 
-                        if (oldEventData.FightCard is not null)
-                            oldFights.AddRange(oldEventData.FightCard.SelectMany(cards => cards.Fights.ToList()));
+                        var uniqueNewFights = newFights.Except(oldFights, fightComparer);
+                        var uniqueOldFights = oldFights.Except(newFights, fightComparer);
 
-                        foreach (var card in newEventData.FightCard)
+                        if (uniqueNewFights.Any())
                         {
-                            AppendCardName(messageBuilder, card);
-                            foreach (var fight in card.Fights)
-                            {
-                                if (oldFights.Contains(fight, fightComparer))
-                                {
-                                    oldFights.RemoveAll(f => fightComparer.Equals(f, fight));
-
-                                    AppendFightShortInfo(messageBuilder, fight);
-                                }
-                                else
-                                {
-                                    messageBuilder.Append("<b>");
-                                    AppendFightShortInfo(messageBuilder, fight);
-                                    messageBuilder.Append("</b>");
-                                }
-                            }
-                            messageBuilder.Append("\n");
-                        }
-
-                        if (oldFights.Any())
-                        {
-                            messageBuilder.Append("<u>Отмененные бои</u>");
-                            messageBuilder.Append("\n");
-                            foreach (var fight in oldFights)
-                            {
-                                messageBuilder.Append("<s>");
+                            messageBuilder.Append("<u>Новые бои</u>\n");
+                            foreach (var fight in uniqueNewFights)
                                 AppendFightShortInfo(messageBuilder, fight);
-                                messageBuilder.Append("</s>");
-                            }
+                            messageBuilder.Append("\n");
+                        }                        
+
+                        if (uniqueOldFights.Any())
+                        {
+                            messageBuilder.Append("<u>Отмененные бои</u>\n");
+                            foreach (var fight in uniqueOldFights)
+                                AppendFightShortInfo(messageBuilder, fight);
                         }
                     }
                 }
@@ -396,7 +384,7 @@ class FightComparer : IEqualityComparer<FightDTO>
         var secondFighter = obj.SecondFighter;
 
         if (string.Compare(firtsFighter, secondFighter) > 0)
-                (firtsFighter, secondFighter) = (secondFighter, firtsFighter);
+            (firtsFighter, secondFighter) = (secondFighter, firtsFighter);
 
         return HashCode.Combine(firtsFighter, secondFighter);
     }
