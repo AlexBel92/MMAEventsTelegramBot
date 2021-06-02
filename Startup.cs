@@ -24,11 +24,14 @@ namespace MMAEvents.TelegramBot
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton<TelegramBotClient>(sp => new TelegramBotClient(Configuration.GetSection("TelegramBot_Key").Value));
+            services.AddSingleton<TelegramBotClient>(
+                sp => new TelegramBotClient(Configuration.GetSection("TelegramBot_Key").Value));
             services.AddTransient<TelegramBotService>();
 
             services.AddHttpClient();
-            services.AddSingleton<EventsApiClient>(sp => new EventsApiClient(Configuration.GetSection("EventsApi:BaseUrl").Value, sp.GetRequiredService<HttpClient>()));
+            services.AddSingleton<EventsApiClient>(
+                sp => new EventsApiClient(
+                    Configuration.GetSection("EventsApi:BaseUrl").Value, sp.GetRequiredService<HttpClient>()));
             services.AddSingleton<IEventsApiClient, CachedApiService>();
 
             services.AddSingleton<CommandsCollection>();
