@@ -15,7 +15,8 @@ namespace MMAEvents.TelegramBot.Commands
         public CommandsCollection(IEventsApiClient apiClient, TelegramBotService telegramService)
         {
             commands = new Dictionary<string, ICommand>();
-            var types = typeof(Startup).Assembly.GetTypes().Where(type => typeof(ICommand).IsAssignableFrom(type) && !type.IsAbstract && type.IsClass);
+            var types = typeof(Startup).Assembly.GetTypes()
+                .Where(type => typeof(ICommand).IsAssignableFrom(type) && !type.IsAbstract && type.IsClass);
 
             foreach (var type in types)
             {
