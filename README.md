@@ -1,5 +1,7 @@
 ## MMA events telegram bot
 
+https://t.me/MMAEvents_Bot
+
 Telegram bot can tell you about the planned and past MMA events.
 And also report to a separate channel about changes in scheduled MMA events.
 
