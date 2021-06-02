@@ -9,4 +9,4 @@ The implementation used:
 * Web api for telegram webhook
 * gRpc as entry point for changed events
 * Client for events web api based on OpenApi specification
-* For caching calls to the events web api the substitute pattern is used
+* For caching calls to the events web api the proxy pattern is used
